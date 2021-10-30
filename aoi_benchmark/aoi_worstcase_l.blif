@@ -1,0 +1,140 @@
+.model worstcase
+.inputs x0 z0
+.outputs out1 out2
+.names x0 a1
+0 1
+.names x0 b1
+0 1
+.names x0 c1
+0 1
+.names x0 d1
+0 1
+.names x0 e1
+0 1
+.names x0 f1
+0 1
+.names x0 g1
+0 1
+.names x0 h1
+0 1
+.names x0 i1
+0 1
+.names x0 j1
+0 1
+.names x0 k1
+0 1
+.names x0 l1
+0 1
+.names x0 m1
+0 1
+.names x0 n1
+0 1
+.names x0 o1
+0 1
+.names x0 p1
+0 1
+.names x0 q1
+0 1
+.names x0 r1
+0 1
+.names x0 s1
+0 1
+.names x0 t1
+0 1
+.names x0 u1
+0 1
+.names x0 v1
+0 1
+.names x0 w1
+0 1
+.names x0 x1
+0 1
+.names x0 y1
+0 1
+.names x0 z1
+0 1
+.names x0 y0
+0 1
+.names y0 z0 a2
+1- 1
+-1 1
+.names a2 z0 b2
+1- 1
+-1 1
+.names b2 z0 c2
+1- 1
+-1 1
+.names c2 z0 d2
+1- 1
+-1 1
+.names d2 z0 e2
+1- 1
+-1 1
+.names e2 z0 f2
+1- 1
+-1 1
+.names f2 z0 g2
+1- 1
+-1 1
+.names g2 z0 h2
+1- 1
+-1 1
+.names h2 z0 i2
+1- 1
+-1 1
+.names i2 z0 j2
+1- 1
+-1 1
+.names j2 z0 k2
+1- 1
+-1 1
+.names k2 z0 l2
+1- 1
+-1 1
+.names l2 z0 m2
+1- 1
+-1 1
+.names m2 z0 n2
+1- 1
+-1 1
+.names n2 z0 o2
+1- 1
+-1 1
+.names o2 z0 p2
+1- 1
+-1 1
+.names p2 z0 q2
+1- 1
+-1 1
+.names q2 z0 r2
+1- 1
+-1 1
+.names r2 z0 s2
+1- 1
+-1 1
+.names s2 z0 t2
+1- 1
+-1 1
+.names t2 z0 u2
+1- 1
+-1 1
+.names u2 z0 v2
+1- 1
+-1 1
+.names v2 z0 w2
+1- 1
+-1 1
+.names w2 z0 x2
+1- 1
+-1 1
+.names x2 z0 y2
+1- 1
+-1 1
+.names y2 z0 z2
+1- 1
+-1 1
+.names a1 b1 c1 d1 e1 f1 g1 h1 i1 j1 k1 l1 m1 n1 o1 p1 q1 r1 s1 t1 u1 v1 w1 x1 y1 z1 out1
+11111111111111111111111111 1
+.names a2 b2 c2 d2 e2 f2 g2 h2 i2 j2 k2 l2 m2 n2 o2 p2 q2 r2 s2 t2 u2 v2 w2 x2 y2 z2 out2
+11111111111111111111111111 1
+.end
