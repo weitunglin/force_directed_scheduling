@@ -22,14 +22,19 @@ std::vector<std::string> split(std::string s) {
 
 Node::Node(std::string name) : m_name(name) {
   this->m_step = -1;
+  this->m_alap = -1;
+  this->m_asap = -1;
 }
 
 int Node::mobility() {
   return this->m_alap - this->m_asap;
 }
 
-Blif::Blif(std::string filename, int latencyConstraint) : m_latency(latencyConstraint) {
+Blif::Blif(std::string filename, int latencyConstraint) : m_latencyConstraint(latencyConstraint) {
   this->parseFile(filename);
+  for (uint i = AND; i <= NOT; ++i) {
+    this->m_resource[i] = 1;
+  }
 }
 
 void Blif::parseFile(std::string filename) {
@@ -94,6 +99,8 @@ void Blif::parseFile(std::string filename) {
       }
     }
   }
+
+  this->m_total = this->m_graph.size();
 }
 
 std::vector<std::string> Blif::getList(std::ifstream& f, std::string name) {
@@ -117,10 +124,199 @@ std::vector<std::string> Blif::getList(std::ifstream& f, std::string name) {
   return result;
 }
 
+void Blif::ALAP() {
+  for (auto i = std::begin(this->m_graph); i != std::end(this->m_graph); ++i) {
+    i->second->m_alap = -1;
+  }
+
+  int count = 0;
+  std::vector<std::string> readyList;
+  for (const auto& i: this->m_outputs) {
+    ++count;
+    this->m_graph[i]->m_alap = this->m_latencyConstraint;
+    std::copy(std::begin(this->m_graph[i]->m_prev), std::end(this->m_graph[i]->m_prev), std::back_inserter(readyList));
+  }
+
+  while (count < this->m_total) {
+    std::set<std::string> nextList;
+    for (auto i = std::begin(readyList); i != std::end(readyList); ++i) {
+      bool ready = this->m_graph[*i]->m_alap == -1 && std::all_of(std::begin(this->m_graph[*i]->m_next), std::end(this->m_graph[*i]->m_next), [&] (const std::string& u) { return this->m_graph[u]->m_alap != -1; });
+      if (ready) {
+        ++count;
+        int min = std::numeric_limits<int>::max();
+        for (const auto& j: this->m_graph[*i]->m_next) {
+          min = std::min(min, this->m_graph[j]->m_alap - 1);
+        }
+        
+        if (min <= -1) {
+          std::cerr << "no feasible solution" << std::endl;
+          return;
+        }
+
+        this->m_graph[*i]->m_alap = min;
+        for (const auto& j: this->m_graph[*i]->m_prev) {
+          nextList.insert(j);
+        }
+      } else {
+        nextList.insert(*i);
+      }
+    }
+
+    readyList.clear();
+    readyList.assign(std::begin(nextList), std::end(nextList));
+  }
+
+  std::cout << "ALAP result" << std::endl;
+  for (const auto& i: this->m_graph) {
+    std::cout << i.first << ": " << i.second->m_alap << std::endl;
+  }
+}
+
+void Blif::ASAP() {
+  for (auto i = std::begin(this->m_graph); i != std::end(this->m_graph); ++i) {
+    i->second->m_asap = -1;
+  }
+
+  int count = 0;
+  std::vector<std::string> readyList;
+  for (const auto& i: this->m_inputs) {
+    ++count;
+    this->m_graph[i]->m_asap = 0;
+    std::copy(std::begin(this->m_graph[i]->m_next), std::end(this->m_graph[i]->m_next), std::back_inserter(readyList));
+  }
+
+  while (count < this->m_total) {
+    std::set<std::string> nextList;
+    for (auto i = std::begin(readyList); i != std::end(readyList); ++i) {
+      bool ready = this->m_graph[*i]->m_asap == -1 && std::all_of(std::begin(this->m_graph[*i]->m_prev), std::end(this->m_graph[*i]->m_prev), [&] (const std::string& u) { return this->m_graph[u]->m_asap != -1; });
+      if (ready) {
+        ++count;
+        int max = INT_MIN;
+        for (const auto& j: this->m_graph[*i]->m_prev) {
+          max = std::max(max, this->m_graph[j]->m_asap + 1);
+        }
+        
+        this->m_graph[*i]->m_asap = max;
+        for (const auto& j: this->m_graph[*i]->m_next) {
+          nextList.insert(j);
+        }
+      } else {
+        nextList.insert(*i);
+      }
+    }
+
+    readyList.clear();
+    readyList.assign(std::begin(nextList), std::end(nextList));
+  }
+
+  std::cout << "ASAP result" << std::endl;
+  for (const auto& i: this->m_graph) {
+    std::cout << i.first << ": " << i.second->m_asap << std::endl;
+  }
+}
+
 int Blif::FD_LCS() {
+  this->ALAP();
+  this->ASAP();
+
+  for (const auto& i: this->m_graph) {
+    double p = 1 / ((i.second->m_alap - i.second->m_asap) + 1);
+    for (int step = i.second->m_asap; step <= i.second->m_alap; ++step) {
+      this->m_dist[i.second->m_op][step] += p;
+    }
+  }
+
+  std::set<std::string> readyList;
+  std::map<uint, std::map<int, int>> resourceCount;
+  for (uint op = AND; op <= NOT; ++op) {
+    for (int i = 0; i < this->m_latencyConstraint; ++i) {
+      resourceCount[op][i] = 0;
+    }
+  }
+
+  int count = 0;
+  count += this->m_inputs.size();
+  for (const auto& i: this->m_inputs) {
+    this->m_graph[i]->m_step = 0;
+    for (const auto& j: this->m_graph[i]->m_next) {
+      readyList.insert(j);
+    }
+  }
+
+  while (count < this->m_total) {
+    Node* minForceNode = nullptr;
+    double minForce = std::numeric_limits<double>::max();
+    int scheduleStep = -1;
+    for (auto i = std::begin(readyList); i != std::end(readyList); ++i) {
+      Node* n = this->m_graph[*i];
+      // check ready
+      bool ready = true;
+      for (const auto& j: n->m_prev) {
+        if (this->m_graph[j]->m_step == -1) {
+          ready = false;
+        }
+      }
+ 
+      if (!ready) {
+        continue;
+      }
+
+      double p = 1 / ((n->m_alap - n->m_asap) + 1);
+      for (int step = n->m_asap; step <= n->m_alap; ++step) {
+        double totalForce = 0.0;
+        // self force
+        for (int t = n->m_asap; t <= n->m_alap; ++t) {
+          totalForce += (static_cast<int>(step == t) - p) * this->m_dist[n->m_op][t];
+        }
+
+        // successors force
+        for (const auto& next: n->m_next) {
+          Node* succ = this->m_graph[next];
+          double newP = 1 / ((succ->m_alap - step) + 1), oldP = 1 / ((succ->m_alap - succ->m_asap) + 1);
+          double newDist = 0.0, oldDist = 0.0;
+          for (int nextStep = succ->m_asap; nextStep <= succ->m_alap; ++nextStep) {
+            if (nextStep > step) {
+              newDist += this->m_dist[succ->m_op][nextStep]; 
+            }
+            
+            oldDist += this->m_dist[succ->m_op][nextStep];
+          }
+
+          totalForce += newP * (newDist) - p * (oldDist);
+        }
+
+        if (totalForce < minForce && (resourceCount[n->m_op][step] < this->m_resource[n->m_op] || step == n->m_alap)) {
+          minForce = totalForce;
+          minForceNode = n;
+          scheduleStep = step;
+        }
+      }
+    }
+
+    minForceNode->m_step = scheduleStep;
+    ++count;
+    std::cout << "set " << minForceNode->m_name << " at step " << scheduleStep << ", op " << minForceNode->m_op << std::endl;
+    ++resourceCount[minForceNode->m_op][minForceNode->m_step];
+ 
+    // remove scheduled node from ready list
+    // add successors into ready list
+    readyList.erase(std::find(std::begin(readyList), std::end(readyList), minForceNode->m_name));
+    for (const auto& i: minForceNode->m_next) {
+      readyList.insert(i);
+    }
+  }
+
+  for (uint op = AND; op <= NOT; ++op) {
+    std::cout << "op: " << op << std::endl;
+    for (int i = 1; i < this->m_latencyConstraint; ++i) {
+      std::cout << "step " << i << ": " << resourceCount[op][i] << std::endl;
+    }
+  }
+
   return 0;
 }
 
 std::ostream& operator<<(std::ostream& os, const Blif& rhs) {
+  os << "Latency-constrained Scheduling" << std::endl;
   return os;
 }
