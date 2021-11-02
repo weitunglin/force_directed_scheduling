@@ -49,18 +49,20 @@ public:
   } while (all operations are schedules)
   */
   int FD_LCS();
-  friend std::ostream& operator<<(std::ostream& os, const Blif& rhs);
+  friend std::ostream& operator<<(std::ostream& os, Blif& rhs);
 
 private:
   void parseFile(std::string filename);
   std::vector<std::string> getList(std::ifstream& f, std::string name);
   void ALAP();
   void ASAP();
+  void updateDist();
 
   std::map<std::string, Node*> m_graph; // contains all nodes (stored in std::map)
   std::map<uint, std::map<int, double>> m_dist; // operation type distribution; m_dist[op][step] = prob.
   std::vector<std::string> m_inputs;
   std::vector<std::string> m_outputs;
+  std::map<uint, std::map<int, std::vector<std::string>>> m_result;
   int m_resource[4];
   int m_latencyConstraint; // latency contraint
   int m_total;
