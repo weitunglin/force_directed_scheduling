@@ -4,6 +4,8 @@
 #include <fstream>
 #include <sstream>
 #include <string>
+#include <numeric>
+#include <iterator>
 #include <map>
 #include <vector>
 #include <set>
@@ -64,6 +66,7 @@ private:
   std::vector<std::string> m_outputs;
   std::map<uint, std::map<int, std::vector<std::string>>> m_result;
   int m_resource[4];
+  std::string m_resource_name[3] = { "AND", "OR", "NOT" };
   int m_latencyConstraint; // latency contraint
   int m_total;
 };

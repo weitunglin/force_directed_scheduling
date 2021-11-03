@@ -170,10 +170,12 @@ void Blif::ALAP() {
     readyList.assign(std::begin(nextList), std::end(nextList));
   }
 
+# ifdef DEBUG
   std::cout << "ALAP result" << std::endl;
   for (const auto& i: this->m_graph) {
     std::cout << i.first << ": " << i.second->m_alap << std::endl;
   }
+# endif
 }
 
 void Blif::ASAP() {
@@ -213,10 +215,12 @@ void Blif::ASAP() {
     readyList.assign(std::begin(nextList), std::end(nextList));
   }
 
+# ifdef DEBUG
   std::cout << "ASAP result" << std::endl;
   for (const auto& i: this->m_graph) {
     std::cout << i.first << ": " << i.second->m_asap << std::endl;
   }
+# endif
 }
 
 void Blif::updateDist() {
@@ -295,7 +299,6 @@ int Blif::FD_LCS() {
         minForceNode = n;
         minForce = std::numeric_limits<double>::min();
         scheduleStep = n->m_alap;
-        std::cout << "set imme " << n->m_name << std::endl;
         break;
       }
 
@@ -325,9 +328,7 @@ int Blif::FD_LCS() {
         }
 
         double totalForce = selfForce + succForce;
-        std::cout << n->m_name << " total force " << totalForce << " self force " << selfForce << " succ force " << succForce << std::endl;
         if (totalForce < minForce && (resourceCount[n->m_op][step] < this->m_resource[n->m_op])) {
-          std::cout << "new min " << n->m_name << std::endl;
           minForce = totalForce;
           minForceNode = n;
           scheduleStep = step;
@@ -345,7 +346,9 @@ int Blif::FD_LCS() {
 
     minForceNode->m_step = scheduleStep;
     ++count;
+# ifdef DEBUG
     std::cout << std::endl << "set " << minForceNode->m_name << " at step " << scheduleStep << ", op " << minForceNode->m_op << ", force " << minForce << std::endl << std::endl;
+# endif
     ++resourceCount[minForceNode->m_op][minForceNode->m_step];
     this->m_result[minForceNode->m_op][minForceNode->m_step].push_back(minForceNode->m_name);
  
@@ -358,12 +361,14 @@ int Blif::FD_LCS() {
     }
   }
 
+# ifdef DEBUG
   for (uint op = AND; op <= NOT; ++op) {
     std::cout << "op: " << op << std::endl;
     for (int i = 1; i < this->m_latencyConstraint; ++i) {
       std::cout << "step " << i << ": " << resourceCount[op][i] << std::endl;
     }
   }
+# endif
 
   return 0;
 }
@@ -371,17 +376,23 @@ int Blif::FD_LCS() {
 std::ostream& operator<<(std::ostream& os, Blif& rhs) {
   os << "Latency-constrained Scheduling" << std::endl;
   for (int step = 1; step <= rhs.m_latencyConstraint; ++step) {
-    os << step << ": ";
+    os << step << ":";
     for (uint op = AND; op <= NOT; ++op) {
-      os << "{";
-      os;
-      for (const auto& i: rhs.m_result[op][step]) {
-        os << i << " ";
+      os << " {";
+      if (rhs.m_result[op][step].size()) {
+        os << std::accumulate(std::next(std::begin(rhs.m_result[op][step])), std::end(rhs.m_result[op][step]), std::move(rhs.m_result[op][step].front()), [] (std::string s, std::string u) { return s + " " + u; });
       }
-      os << "} ";
+      os << "}";
     }
 
     os << std::endl;
   }
+
+  for (uint i = AND; i <= NOT; ++i) {
+    os << "#" << rhs.m_resource_name[i] << ": " << rhs.m_resource[i] << std::endl;
+  }
+
+  os << "END" << std::endl;
   return os;
 }
+
