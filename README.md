@@ -15,7 +15,7 @@ cmake --build build
 
 # Run Force-Directed Scheduling
 
-### Symposis
+### Synopsis
 ```sh
 <PATH_TO_LCS> <PATH_TO_BLIF> <LATENCY_CONSTRAINT>
 ```
