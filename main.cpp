@@ -23,6 +23,7 @@ int main(int argc, char* argv[]) {
   Blif* blif = new Blif(args[1], std::stoi(args[2]));
   blif->FD_LCS();
   std::cout << *blif;
+  delete blif;
 
   return 0;
 }

@@ -1,0 +1,57 @@
+.model worstcase
+.inputs a0 b0 c0
+.outputs a10 a11 a12 a13 a14 a15 a16 a17 a18 a19 b19
+.names a0 c0 a1
+1- 1
+-1 1
+.names a1 a10
+0 1
+.names a1 a11
+0 1
+.names a1 a12
+0 1
+.names a1 a13
+0 1
+.names a1 a14
+0 1
+.names a1 a15
+0 1
+.names a1 a16
+0 1
+.names a1 a17
+0 1
+.names a1 a18
+0 1
+.names a1 a19
+0 1
+.names b0 c0 b10
+1- 1
+-1 1
+.names b10 c0 b11
+1- 1
+-1 1
+.names b11 c0 b12
+1- 1
+-1 1
+.names b12 c0 b13
+1- 1
+-1 1
+.names b13 c0 b14
+1- 1
+-1 1
+.names b14 c0 b15
+1- 1
+-1 1
+.names b15 c0 b16
+1- 1
+-1 1
+.names b16 c0 b17
+1- 1
+-1 1
+.names b17 c0 b18
+1- 1
+-1 1
+.names b18 c0 b19
+1- 1
+-1 1
+.end

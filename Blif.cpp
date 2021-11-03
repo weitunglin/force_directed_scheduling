@@ -295,7 +295,7 @@ int Blif::FD_LCS() {
         minForceNode = n;
         minForce = std::numeric_limits<double>::min();
         scheduleStep = n->m_alap;
-        std::cout << "set imme " << std::endl;
+        std::cout << "set imme " << n->m_name << std::endl;
         break;
       }
 
@@ -321,7 +321,7 @@ int Blif::FD_LCS() {
             oldDist += this->m_dist[succ->m_op][nextStep];
           }
 
-          succForce += newP * (newDist) - p * (oldDist);
+          succForce += newP * (newDist) - oldP * (oldDist);
         }
 
         double totalForce = selfForce + succForce;
@@ -333,6 +333,14 @@ int Blif::FD_LCS() {
           scheduleStep = step;
         }
       }
+    }
+
+    if (minForceNode == nullptr) {
+      // need more resource
+      minForceNode = this->m_graph[*readyList.begin()];
+      scheduleStep = minForceNode->m_asap;
+      minForce = std::numeric_limits<double>::min();
+      ++this->m_resource[minForceNode->m_op];
     }
 
     minForceNode->m_step = scheduleStep;
@@ -366,6 +374,7 @@ std::ostream& operator<<(std::ostream& os, Blif& rhs) {
     os << step << ": ";
     for (uint op = AND; op <= NOT; ++op) {
       os << "{";
+      os;
       for (const auto& i: rhs.m_result[op][step]) {
         os << i << " ";
       }
